@@ -1,6 +1,13 @@
 const { makeWASocket, useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const readline = require('readline');
+const express = require('express'); // ضفنا مكتبة إكسبريس للخطة المجانية
+
+// تشغيل سيرفر ويب وهمي لإبقاء البوت حياً على Render المجاني
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => res.send('🤖 بوت BOKA_MSTR يعمل بنجاح 24/7 على الخطة المجانية!'));
+app.listen(PORT, () => console.log(`🌍 سيرفر الويب الوهمي شغال على بورت: ${PORT}`));
 
 // تجهيز إدخال رقم الهاتف من السيرفر لو احتجناه
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -22,9 +29,8 @@ async function startBokaBot() {
         console.log("🤖 بوت BOKA_MSTR جاهز للربط برقم الهاتف!");
         console.log("=========================================");
         
-        // هنا السيرفر هيطلب منك رقم الهاتف، أو تقدر تكتبه تلقائياً في السطر اللي تحت
-        // امسح 201273057668 وحط رقم بوتك بالرمز الدولي (مثال  1xxxxxxxxx)
-        const phoneNumber = "+2349096793786"; 
+        // جلب الرقم من المتغيرات البيئية اللي حطناها في الموقع عشان ما يتسرقش من الـ GitHub
+        const phoneNumber = process.env.OWNER_NUMBER || "201234567890"; 
         
         await delay(3000); // انتظار بسيط لتهيئة السيرفر
         try {
@@ -47,7 +53,7 @@ async function startBokaBot() {
         const isGroup = remoteJid.endsWith('@g.us');
         const textMessage = m.message.conversation || m.message.extendedTextMessage?.text || "";
         
-        const prefix = '.'; 
+        const prefix = process.env.PREFIX || '.'; 
         if (!textMessage.startsWith(prefix)) return;
         
         const args = textMessage.slice(prefix.length).trim().split(/ +/);
@@ -130,7 +136,7 @@ async function startBokaBot() {
 
             try {
                 await sock.groupParticipantsUpdate(remoteJid, [target], "demote");
-                await sock.sendMessage(remoteJid, { text: `✅ تم تنزيل العضو من الإدارة بنجاح.` }, { quoted: m });
+                await sock.sendMessage(remoteJid, { text: `✅ تم تنصيب العضو من الإدارة بنجاح.` }, { quoted: m });
             } catch (err) {
                 await sock.sendMessage(remoteJid, { text: '❌ فشل التنزيل.' }, { quoted: m });
             }
